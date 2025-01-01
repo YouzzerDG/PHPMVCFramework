@@ -1,0 +1,21 @@
+{
+  "name": "user/php-framework",
+  "description": "Framework in PHP",
+  "type": "project",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Youssri",
+      "email": "youssdgrebb@gmail.com"
+    }
+  ],
+  "autoload": {
+    "psr-4": {
+      "App\\": "app/classes",
+      "Controller\\": "app/controllers",
+      "Model\\": "app/models",
+      "Trait\\": "app/traits"
+    }
+  },
+  "require": {}
+}
