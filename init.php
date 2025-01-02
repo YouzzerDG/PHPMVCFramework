@@ -8,5 +8,8 @@ require_once 'vendor/autoload.php';
 (new \App\Route())->register([
     ['/', Controller\HomeController::class, 'index'],
     ['/albums', Controller\AlbumController::class, 'index'],
-    ['/album/:id', Controller\AlbumController::class, 'show'],
+    ['/albums/add', Controller\AlbumController::class, 'add'],
+    ['/albums/:id', Controller\AlbumController::class, 'show'],
+    ['/albums/:id/update', Controller\AlbumController::class, 'update'],
+    ['/albums/:id/delete', Controller\AlbumController::class, 'delete'],
 ])->run();

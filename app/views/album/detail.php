@@ -1,1 +1,1 @@
-album indexxx
+detail view

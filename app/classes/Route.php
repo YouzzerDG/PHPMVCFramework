@@ -9,36 +9,94 @@ class Route
 
     public function register(array $routes): Route
     {
-        //todo: lees batin dm routing met parameters
-        foreach ($routes as $route) {
+        foreach ( $routes as $route ) {
             $uri = $route[0];
+            $segments = explode( '/', ltrim( $uri, '/' ) );
+
             $controller = $route[1];
             $action = $route[2];
 
-            $this->routes[$uri] = [
+            $uriIdentifier = $this->createUriIdentifier( $segments );
+
+            $this->routes[$uriIdentifier] = [
                 'controller' => $controller,
-                'action' => $action
-            ];
+                'action' => $action,
+                'segments' =>  $uri === '/' || $uri === '' ? [] : $segments,
+            ];            
+
+            if ( str_contains( $uri, ':' ) ) {
+                $this->routes[$uriIdentifier]['parameters'] = $this->setParameters( $segments );
+            }
+            
         }
 
-        print_r($this->routes);
-
-
         return $this;
+    }
+
+    private function createUriIdentifier(array $uriSegments): string 
+    {
+        if( empty( $uriSegments ) ) return '/';
+        
+        foreach( $uriSegments as &$segment ) {
+            if( str_starts_with( $segment, ':' ) ) {
+                $segment = ':';
+            }
+        }
+
+        return '/' . implode( '/', $uriSegments );
+    }
+
+    private function setParameters(array $uriSegments): array 
+    {
+        $params = [];
+
+        foreach( $uriSegments as $key => $segment ) {
+            if( str_starts_with( $segment, ':' ) ) {
+                $params[$key] = $segment;
+            }
+        }
+
+        return $params;
     }
 
     #[NoReturn]
     public function run(): void
     {
-        $currentPage = '/' . $_GET['_url'] ?? '/';//(!isset($_GET['_url']) || $_GET['_url'] == '' ? '' : $_GET['_url']);
+        $currentPage = '/' . $_GET['_url'] ?? '/';
 
-        if (preg_match('(\W:[a-zA-Z]*)', $uri)) {
-
+        // Load controller if route is found
+        if( isset( $this->routes[$currentPage] ) ) {
+            ( new $this->routes[$currentPage]['controller']() )->{ $this->routes[$currentPage]['action'] }();
         }
+        else {
+            $currentPageSegments = explode( '/', ltrim( $currentPage, '/' ) );
 
-        $route = $this->routes[$currentPage];
+            $args = [];
+            foreach( $currentPageSegments as $key => &$uriSegment ) {
+                foreach( array_keys($this->routes) as $j => $routeKey ) {
+                    // Skip home & routes with no parameters.
+                    if( $routeKey === '/' || !str_contains($routeKey, ':') ) continue;
 
-        (new $route['controller']())->{$route['action']}();
+                    // If segment of uri is not found in the route key
+                    // AND if segment is bound to a parameter,
+                    // get the parameter name and it bind to the value of the uri segment.
+                    if (!strpos($routeKey, $uriSegment) && isset($this->routes[$routeKey]['parameters'][$key]) ) {
+                        $param = ltrim( $this->routes[$routeKey]['parameters'][$key], ':');
+
+                        $args[$param] = $uriSegment;
+                        $uriSegment = ':';
+                    }
+                }
+            }
+
+            $route = '/' . implode('/', $currentPageSegments);
+            
+            $controller = new $this->routes[$route]['controller']();
+            
+            if(method_exists($controller, $this->routes[$route]['action'])) {
+                call_user_func_array([$controller, $this->routes[$route]['action']], $args);
+            }
+        }
 
         exit;
     }
