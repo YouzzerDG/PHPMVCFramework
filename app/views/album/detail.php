@@ -1,1 +1,1 @@
-detail view
+<h1>detail view</h1>

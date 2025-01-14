@@ -12,4 +12,4 @@ require_once 'vendor/autoload.php';
     ['/albums/:id', Controller\AlbumController::class, 'show'],
     ['/albums/:id/update', Controller\AlbumController::class, 'update'],
     ['/albums/:id/delete', Controller\AlbumController::class, 'delete'],
-])->run();
+]);

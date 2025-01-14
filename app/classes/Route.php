@@ -7,7 +7,7 @@ class Route
 {
     private array $routes;
 
-    public function register(array $routes): Route
+    public function register(array $routes): void
     {
         foreach ( $routes as $route ) {
             $uri = $route[0];
@@ -30,7 +30,7 @@ class Route
             
         }
 
-        return $this;
+        $this->run();
     }
 
     private function createUriIdentifier(array $uriSegments): string 
@@ -60,20 +60,21 @@ class Route
     }
 
     #[NoReturn]
-    public function run(): void
+    private function run(): void
     {
         $currentPage = '/' . $_GET['_url'] ?? '/';
 
         // Load controller if route is found
         if( isset( $this->routes[$currentPage] ) ) {
-            ( new $this->routes[$currentPage]['controller']() )->{ $this->routes[$currentPage]['action'] }();
+            call_user_func([$this->routes[$currentPage]['controller'], $this->routes[$currentPage]['action']]);
+            // ( new $this->routes[$currentPage]['controller']() )->{ $this->routes[$currentPage]['action'] }();
         }
         else {
             $currentPageSegments = explode( '/', ltrim( $currentPage, '/' ) );
 
             $args = [];
             foreach( $currentPageSegments as $key => &$uriSegment ) {
-                foreach( array_keys($this->routes) as $j => $routeKey ) {
+                foreach( array_keys($this->routes) as $routeKey ) {
                     // Skip home & routes with no parameters.
                     if( $routeKey === '/' || !str_contains($routeKey, ':') ) continue;
 

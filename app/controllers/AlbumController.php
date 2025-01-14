@@ -7,15 +7,22 @@ class AlbumController implements IController
 {
     public function index(): void
     {
+
+        //$albums = Albums::all();
+
         echo View::render('album/index');
     }
 
     public function show($id): void
     {
-        echo $id;
+        // echo $id;
+        // var_dump(__FUNCTION__);
 
         // TODO: statically call Modelname::get() with id from uri
-        //$album = Album::get($id);
+        $album = Album::where($id);
+
+
+        // print_r($album);
         echo View::render('album/detail');
     }
 
