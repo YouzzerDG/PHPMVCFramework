@@ -9,5 +9,5 @@ return array(
     'Trait\\' => array($baseDir . '/app/traits'),
     'Model\\' => array($baseDir . '/app/models'),
     'Controller\\' => array($baseDir . '/app/controllers'),
-    'App\\' => array($baseDir . '/app/classes'),
+    'App\\' => array($baseDir . '/app/core'),
 );

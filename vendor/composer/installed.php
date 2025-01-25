@@ -3,7 +3,7 @@
         'name' => 'user/php-framework',
         'pretty_version' => 'dev-main',
         'version' => 'dev-main',
-        'reference' => 'f546f1f0b49907ad25239cd925c86a1eee41657e',
+        'reference' => '76ab84572e2f2c0b5f54962e38f18043271b764a',
         'type' => 'project',
         'install_path' => __DIR__ . '/../../',
         'aliases' => array(),
@@ -13,7 +13,7 @@
         'user/php-framework' => array(
             'pretty_version' => 'dev-main',
             'version' => 'dev-main',
-            'reference' => 'f546f1f0b49907ad25239cd925c86a1eee41657e',
+            'reference' => '76ab84572e2f2c0b5f54962e38f18043271b764a',
             'type' => 'project',
             'install_path' => __DIR__ . '/../../',
             'aliases' => array(),
