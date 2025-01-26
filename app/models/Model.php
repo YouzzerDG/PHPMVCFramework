@@ -43,6 +43,8 @@ abstract class Model
             $query .= self::createJoin($model);
         }
         
+
+        var_dump($query);
         $db = Database::getInstance();
 
         $statement = $db->prepare($query);
@@ -55,6 +57,10 @@ abstract class Model
             return null;
         
         $dataSet = [];
+
+
+        var_dump($result);
+        exit;
 
         foreach($result as $data) {
             $dataSets = self::getSubsets($model, $data);
@@ -151,7 +157,13 @@ abstract class Model
         
         return implode("\r\n", array_map(function ($constraint) {
             $joinedTable = $constraint['model']::$table['name'];
-            return "INNER JOIN $joinedTable ON {$constraint['on']}";
+
+            $joinType = match($constraint['relationType']) {
+                'oneToOne' => 'INNER',
+                'manyToOne' => 'LEFT'
+            };
+
+            return "$joinType JOIN $joinedTable ON {$constraint['on']}";
         }, $model::$constraints));
     }
 

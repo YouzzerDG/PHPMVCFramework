@@ -7,6 +7,7 @@ require_once 'vendor/autoload.php';
 
 (new \App\Route())->register([
     ['/', Controller\HomeController::class, 'index'],
+    ['/contacts', Controller\ContactController::class, 'index'],
     ['/reservations', Controller\ReservationController::class, 'index'],
     ['/reservations/add', Controller\ReservationController::class, 'create'],
     ['/reservations/:id', Controller\ReservationController::class, 'show'],

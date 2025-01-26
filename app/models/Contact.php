@@ -17,7 +17,7 @@ class Contact extends Model
         'notes' => [
             'model' => 'Model\Note',
             'relationType' => 'manyToOne',
-            'on' => 'reservations.service_id = services.id'
+            'on' => 'contacts.id = notes.contact_id'
         ],
     ];
 
