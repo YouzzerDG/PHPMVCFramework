@@ -16,10 +16,14 @@ class Contact extends Model
     protected static array $constraints = [
         'notes' => [
             'model' => 'Model\Note',
-            'relationType' => 'manyToOne',
-            'on' => 'contacts.id = notes.contact_id'
+            'relationType' => 'hasMany',
+            'on' => [
+                'primaryKey' => 'id',
+                'foreignKey' => 'contact_id'
+            ]
         ],
     ];
+    // 'contacts.id = notes.contact_id'
 
     public array $notes;
     

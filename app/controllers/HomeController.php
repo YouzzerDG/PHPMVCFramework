@@ -8,7 +8,12 @@ class HomeController implements IController
 {
     public function index(): void
     {
-        echo View::render('home/index');
+        echo View::render('home/index', [
+            'pageInfo' => [
+                'pageTitle' => 'Home',
+                'pageDescription' => 'home pagina!'
+            ]
+        ]);
     }
 
     public function show($id): void {}

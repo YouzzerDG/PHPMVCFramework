@@ -21,12 +21,12 @@ class Reservation extends Model
     protected static array $constraints = [
         'service' => [
             'model' => 'Model\Service',
-            'relationType' => 'oneToOne',
+            'relationType' => 'hasOne',
             'on' => 'reservations.service_id = services.id'
         ],
         'contact' => [
             'model' => 'Model\Contact',
-            'relationType' => 'oneToOne',
+            'relationType' => 'hasOne',
             'on' => 'reservations.contact_id = contacts.id'
         ]
     ];

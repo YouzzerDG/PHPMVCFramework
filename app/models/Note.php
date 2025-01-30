@@ -7,6 +7,9 @@ class Note extends Model
         'columns' => [
             'id',
             'content',
+        ],
+        'foreignKeys' => [
+            'contact_id'
         ]
     ];
 

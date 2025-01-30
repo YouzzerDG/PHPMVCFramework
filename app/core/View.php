@@ -2,16 +2,25 @@
 
 abstract class View
 {
-    public static function render(string $view, array $templateData = []): string|false
+    public static function render(string $view, array $viewTemplateData = []): string|false
     {
-        $viewDir = APP_PATH . 'views/' . $view . '.php';
+        $viewFile = APP_PATH . 'views/' . $view . '.php';
+        $templateFile = APP_PATH . 'views/template.php';
 
-        if (!empty($templateData))
-            extract($templateData);
+        if(!file_exists($viewFile) || !file_exists($templateFile))
+            return false;
 
+        $renderData = self::inject($viewFile, $viewTemplateData);
+        
+        return self::inject($templateFile, ['renderData' => $renderData] + $viewTemplateData);
+    }
+
+    private static function inject(string $file, array $data = []): string|false
+    {
         ob_start();
-
-        require_once $viewDir;
+        
+        extract($data, EXTR_SKIP);
+        require $file;
 
         return ob_get_clean();
     }
