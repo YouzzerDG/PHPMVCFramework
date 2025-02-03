@@ -39,20 +39,6 @@ abstract class Model
         $model = self::getCalledModel();
 
         $query = "SELECT " . self::getCols($model);
-
-        // if (!empty($model::$constraints)){
-        //     // $query .= self::getCols($model, true);
-
-        //     foreach ($model::$constraints as $constraint) {
-        //         $query .= match($constraint['relationType']) {
-        //             'oneToOne', 'hasOne' => 'INNER',
-        //             'manyToOne' => 'LEFT'
-        //         };
-        //     }
-        // }
-        // else {
-        //     $query .= self::getCols($model);
-        // }
         
         $query .= " FROM {$model::$table['name']}\r\n";
 
@@ -67,6 +53,8 @@ abstract class Model
         if ($results === false || empty($results)){
             return null;
         }
+
+        // var_dump($results);
             
         foreach($results as &$record) {
             if(!empty($model::$constraints)) {
@@ -200,6 +188,18 @@ abstract class Model
         }, $model::$constraints));
     }
 
+    private static function getBlueprint(string $model, mixed $data): array
+    {
+        return [$model => array_combine(
+            array_map(
+                function ($key) use ($model) {
+                    return str_replace($model::$table['name'] . "_", '', $key);
+                }, 
+                array_keys($data)
+            ), 
+        $data)];
+    }
+
     private static function getSubsets(string $model, mixed $result): array
     {
         $dataSets = [];
@@ -220,28 +220,27 @@ abstract class Model
 
                 match($property->getType()->getName()) {
                     'array' => 
-                        $dataSets[$model][$constrainedProperty] = $result[$constrainedProperty],
+                        $dataSets[$model][$constrainedProperty] = 
+                        array_map(
+                            function ($subsets) use ($constraint) {
+                                $model = $constraint['model'];
+
+                                return [$model => array_combine(
+                                    array_map(
+                                        function ($key) use ($model) {
+                                            return str_replace($model::$table['name'] . "_", '', $key);
+                                        }, 
+                                        array_keys($subsets)
+                                    ), 
+                                $subsets)];
+                            }, 
+                        $result[$constrainedProperty]),
                     default => 
                         $dataSets[$model][$constrainedProperty] = array_filter($result, function ($key) use ($constraint) {
                         $model = $constraint['model'];
                         return str_contains($key, $model::$table['name']) === true;
                     }, ARRAY_FILTER_USE_KEY)
                 };
-
-                match(gettype($dataSets[$model][$constrainedProperty])){
-                    'array' => $keys = array_map(function ($key) use ($constraint) {
-                            $model = $constraint['model'];
-                            return str_replace($model::$table['name'] . "_", '', $key);
-                        }, $dataSets[$model][$constrainedProperty]),
-                };
-
-                // $keys = array_map(function ($key) use ($constraint) {
-                //     $model = $constraint['model'];
-                //     return str_replace($model::$table['name'] . "_", '', $key);
-                // }, array_keys($dataSets[$model][$constrainedProperty]));
-
-
-                var_dump($keys);
 
                 // $dataSets[$model][$constrainedProperty] = array_combine($keys, $dataSets[$model][$constrainedProperty]);
             }
