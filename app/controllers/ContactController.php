@@ -9,7 +9,7 @@ class ContactController implements IController
 {
     public function index(): void
     {
-        var_dump(Contact::all());
+        $contacts = Contact::all();
         
         echo View::render('contacts/index');
     }

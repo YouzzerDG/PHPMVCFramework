@@ -25,7 +25,7 @@ class Contact extends Model
     ];
     // 'contacts.id = notes.contact_id'
 
-    public array $notes;
+    public array $notes = [];
     
     public function __construct(
         private int    $id,
