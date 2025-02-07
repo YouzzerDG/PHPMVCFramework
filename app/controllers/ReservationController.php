@@ -20,6 +20,8 @@ class ReservationController implements IController
 
         $reservation = Reservation::find(['id' => $id]);
 
+        var_dump($reservation);exit;
+
         echo View::render('reservations/detail', ['reservation' => $reservation]);
     }
 

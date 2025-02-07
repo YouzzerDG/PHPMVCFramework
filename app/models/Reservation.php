@@ -22,12 +22,18 @@ class Reservation extends Model
         'service' => [
             'model' => 'Model\Service',
             'relationType' => 'hasOne',
-            'on' => 'reservations.service_id = services.id'
+            'on' => [
+                'primaryKey' => 'id',
+                'foreignKey' => 'service_id'
+            ]
         ],
         'contact' => [
             'model' => 'Model\Contact',
             'relationType' => 'hasOne',
-            'on' => 'reservations.contact_id = contacts.id'
+            'on' => [
+                'primaryKey' => 'id',
+                'foreignKey' => 'contact_id'
+            ]
         ]
     ];
 

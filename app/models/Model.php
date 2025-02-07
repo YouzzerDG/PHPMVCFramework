@@ -3,7 +3,6 @@
 use App\Database;
 use ReflectionProperty;
 
-#[\AllowDynamicProperties]
 abstract class Model
 {
     // private \PDO $db;
@@ -53,14 +52,42 @@ abstract class Model
         return $objs;
     }
 
-    // public static function where(mixed $params): Model|null
-    // {
-    //     $model = self::getCalledModel();
-        
-    //     var_dump($model, $params);
+    private static function lazyLoad(string $model, array $results): array
+    {
+        $db = Database::getInstance();
 
+        $data = [];
 
-    // }
+        foreach($results as &$record) {
+            if(!empty($model::$constraints)) {
+                foreach($model::$constraints as $property => $constraint) {
+                    $query = "SELECT " . self::getCols($constraint['model']) . " FROM {$constraint['model']::$table['name']}\r\n";
+
+                    // $query .= match($constraint['relationType']) {
+                    //     'oneToOne', 'hasOne' => 'INNER',
+                    //     'manyToOne', 'hasMany' => "INNER JOIN {$model::$table['name']} ON {$model::$table['name']}.{$constraint['on']['primaryKey']} = {$constraint['model']::$table['name']}.{$constraint['on']['foreignKey']} WHERE {$model::$table['name']}.{$constraint['on']['primaryKey']} = " . $record[implode('_', [$model::$table['name'], $constraint['on']['primaryKey']])]
+                    // };
+
+                    // For lazyloading maybe just a where, joins for eagerloading
+                    //INNER JOIN {$model::$table['name']} ON {$model::$table['name']}.{$constraint['on']['primaryKey']} = {$constraint['model']::$table['name']}.{$constraint['on']['foreignKey']} WHERE {$model::$table['name']}.{$constraint['on']['primaryKey']} = " . $record[implode('_', [$model::$table['name'], $constraint['on']['primaryKey']])]
+                    $query .= "WHERE {$constraint['model']::$table['name']}.{$constraint['on']['foreignKey']} = " . $record[implode('_', [$model::$table['name'], $constraint['on']['primaryKey']])];
+
+                    var_dump($query, $record[$constraint['on']['primaryKey']]);
+                    exit;
+
+                    if(!empty($db->query($query)->fetchAll(\PDO::FETCH_ASSOC))) {
+                        $record[$property] = $db->query($query)->fetchAll(\PDO::FETCH_ASSOC);
+                    }
+                }
+            }
+
+            $data[] = self::getDataSet($model, $record);
+        }
+
+        return $data;
+    }
+
+    private static function eagerLoad(){}
 
     public static function all(): array|null
     {
@@ -82,70 +109,46 @@ abstract class Model
             return null;
         }
             
-        $dataSets = [];
-        foreach($results as &$record) {
-            if(!empty($model::$constraints)) {
-                foreach($model::$constraints as $property => $constraint) {
-                    $query = "SELECT " . self::getCols($constraint['model']) . " FROM {$constraint['model']::$table['name']}\r\n";
-
-                    $query .= match($constraint['relationType']) {
-                        'oneToOne', 'hasOne' => 'INNER',
-                        'manyToOne', 'hasMany' => "INNER JOIN {$model::$table['name']} ON {$model::$table['name']}.{$constraint['on']['primaryKey']} = {$constraint['model']::$table['name']}.{$constraint['on']['foreignKey']} WHERE {$model::$table['name']}.{$constraint['on']['primaryKey']} = " . $record[implode('_', [$model::$table['name'], $constraint['on']['primaryKey']])]
-                    };
-                    
-                    if(!empty($db->query($query)->fetchAll(\PDO::FETCH_ASSOC)))
-                        $record[$property] = $db->query($query)->fetchAll(\PDO::FETCH_ASSOC);
-                }
-            }
-
-            $dataSets[] = self::getDataSet($model, $record);
-        }
+        $dataSets = self::lazyLoad($model, $results);
         
         return self::instantiate($model, $dataSets);
     }
 
-    public static function find(mixed $param): Model|null
+    public static function find(array $param): Model|null
     {
         $model = self::getCalledModel();
 
-        $query = "SELECT " . self::getCols($model) . " FROM {$model::$table['name']}\r\n";
-
-        if (!empty($model::$constraints)){
-            $query .= self::createJoin($model);
-        }
+        $query = "SELECT " . self::getCols($model);
         
-        $key = key($param);
+        $query .= " FROM {$model::$table['name']}\r\n";
+
+        $key = array_key_first($param);
         $placeholder = ":" . $key;
 
-        $query .= "\r\nWHERE {$model::$table['name']}.{$key} = $placeholder";
+        $query .= "WHERE {$model::$table['name']}.{$key} = $placeholder";
 
         $db = Database::getInstance();
-
+        
         $statement = $db->prepare($query);
 
-        self::bindParam($statement, $param);
+        self::bindParams($statement, $param);
 
         $statement->execute();
 
         $result = $statement->fetch(\PDO::FETCH_ASSOC);
 
-        if ($result === false)
+        if ($result === false || empty($result)){
             return null;
-        
-        $dataSets = self::getSubsets($model, $result);
-
-        $obj = new $model(...$dataSets[$model]);
-
-        if (!empty($model::$constraints)){
-            foreach($model::$constraints as $property => $constraint) {
-                $obj->{$property} = new $constraint['model'](...$dataSets[$constraint['model']]);
-            }
         }
+        
+        $dataSet = self::lazyLoad($model, [$result]);
 
-        return $obj;
+        $obj = self::instantiate($model, $dataSet);
+
+        return $obj[0];
     }
 
-    private static function bindParam($statement, $params): void 
+    private static function bindParams($statement, $params): void 
     {
         foreach ($params as $key => $value) {
             $placeholder = ":{$key}";
@@ -173,23 +176,6 @@ abstract class Model
         }
 
         return implode(", \r\n", $cols);
-    }
-
-    private static function createJoin(string $model): string
-    {
-        if (empty($model::$constraints)) 
-            return '';
-        
-        return implode("\r\n", array_map(function ($constraint) {
-            $joinedTable = $constraint['model']::$table['name'];
-
-            $joinType = match($constraint['relationType']) {
-                'oneToOne', 'hasOne' => 'INNER',
-                'manyToOne' => 'LEFT'
-            };
-
-            return "$joinType JOIN $joinedTable ON {$constraint['on']}";
-        }, $model::$constraints));
     }
 
     private static function getBlueprint(string $model, mixed $data): array
