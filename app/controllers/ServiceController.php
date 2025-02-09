@@ -13,7 +13,7 @@ class ServiceController implements IController
         echo View::render("services/index");
     }
 
-    public function show($id): void
+    public function detail($id): void
     {
 
     }
@@ -21,6 +21,11 @@ class ServiceController implements IController
     public function create(): void
     {
 
+    }
+
+    public function edit($id): void
+    {
+        
     }
 
     public function update($id): void

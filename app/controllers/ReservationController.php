@@ -14,13 +14,9 @@ class ReservationController implements IController
         echo View::render('reservations/index', ['reservations' => $reservations]);
     }
 
-    public function show($id): void
+    public function detail($id): void
     {
-        //$reservation = Model::getWhere(Reservation::class, ['reservations.id' => $id]);
-
         $reservation = Reservation::find(['id' => $id]);
-
-        var_dump($reservation);exit;
 
         echo View::render('reservations/detail', ['reservation' => $reservation]);
     }
@@ -80,6 +76,13 @@ class ReservationController implements IController
                 }
             }
         }
+    }
+
+    public function edit($id): void
+    {
+        $reservation = Reservation::find(['id' => $id]);
+
+        echo View::render('reservations/edit', ['reservation' => $reservation]);
     }
 
     public function update($id): void

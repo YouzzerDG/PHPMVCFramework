@@ -1,10 +1,8 @@
-<?php
-
-namespace Controller;
+<?php namespace Controller;
 
 use App\View;
 
-class HomeController implements IController
+class HomeController
 {
     public function index(): void
     {

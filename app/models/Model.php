@@ -13,82 +13,6 @@ abstract class Model
     ];
     protected static array $constraints = [];
 
-    public static function __callStatic($name, $arguments)
-    {
-        var_dump('call statuc');
-        var_dump($name, $arguments);
-    }
-
-    private static function getCalledModel()
-    {
-        return get_called_class();
-    }
-
-    private static function instantiate(string $model, array $dataSets): array 
-    {
-        $objs = [];
-        foreach($dataSets as $dataSet) {
-
-            $obj = new $model(...$dataSet[$model]);
-
-            if (!empty($model::$constraints)){
-                foreach($model::$constraints as $constrainedProperty => $constraint) {
-                    if(isset($dataSet[$constrainedProperty]) && !empty($dataSet[$constrainedProperty])) {
-                        if (is_array($obj->{$constrainedProperty})) {
-                            array_walk($dataSet[$constrainedProperty], function ($dependancy) use ($obj, $constrainedProperty, $constraint) { 
-                                array_push( $obj->{$constrainedProperty}, new $constraint['model'](...$dependancy[$constraint['model']]));
-                            });
-                        }
-                        else {
-                            $obj->{$property} = new $constraint['model'](...$dataSet[$constrainedProperty][$constraint['model']]);
-                        }
-                    }
-                }
-            }
-
-            $objs[] = $obj;
-        }
-
-        return $objs;
-    }
-
-    private static function lazyLoad(string $model, array $results): array
-    {
-        $db = Database::getInstance();
-
-        $data = [];
-
-        foreach($results as &$record) {
-            if(!empty($model::$constraints)) {
-                foreach($model::$constraints as $property => $constraint) {
-                    $query = "SELECT " . self::getCols($constraint['model']) . " FROM {$constraint['model']::$table['name']}\r\n";
-
-                    // $query .= match($constraint['relationType']) {
-                    //     'oneToOne', 'hasOne' => 'INNER',
-                    //     'manyToOne', 'hasMany' => "INNER JOIN {$model::$table['name']} ON {$model::$table['name']}.{$constraint['on']['primaryKey']} = {$constraint['model']::$table['name']}.{$constraint['on']['foreignKey']} WHERE {$model::$table['name']}.{$constraint['on']['primaryKey']} = " . $record[implode('_', [$model::$table['name'], $constraint['on']['primaryKey']])]
-                    // };
-
-                    // For lazyloading maybe just a where, joins for eagerloading
-                    //INNER JOIN {$model::$table['name']} ON {$model::$table['name']}.{$constraint['on']['primaryKey']} = {$constraint['model']::$table['name']}.{$constraint['on']['foreignKey']} WHERE {$model::$table['name']}.{$constraint['on']['primaryKey']} = " . $record[implode('_', [$model::$table['name'], $constraint['on']['primaryKey']])]
-                    $query .= "WHERE {$constraint['model']::$table['name']}.{$constraint['on']['foreignKey']} = " . $record[implode('_', [$model::$table['name'], $constraint['on']['primaryKey']])];
-
-                    var_dump($query, $record[$constraint['on']['primaryKey']]);
-                    exit;
-
-                    if(!empty($db->query($query)->fetchAll(\PDO::FETCH_ASSOC))) {
-                        $record[$property] = $db->query($query)->fetchAll(\PDO::FETCH_ASSOC);
-                    }
-                }
-            }
-
-            $data[] = self::getDataSet($model, $record);
-        }
-
-        return $data;
-    }
-
-    private static function eagerLoad(){}
-
     public static function all(): array|null
     {
         $model = self::getCalledModel();
@@ -148,6 +72,95 @@ abstract class Model
         return $obj[0];
     }
 
+    public static function add(mixed $data): bool
+    {
+        $model = self::getCalledModel();
+
+        //TODO: make getcols also return not ID from model
+        $query = "INSERT INTO {$model::$table['name']} (" . self::getCols($model, false) . ")";
+
+        var_dump($query);
+
+        return false;
+    }
+
+    public static function __callStatic($name, $arguments)
+    {
+        var_dump('call statuc');
+        var_dump($name, $arguments);
+    }
+
+    //Internal model functions
+
+    private static function getCalledModel()
+    {
+        return get_called_class();
+    }
+
+    private static function instantiate(string $model, array $dataSets): array 
+    {
+        $objs = [];
+        foreach($dataSets as $dataSet) {
+
+            $obj = new $model(...$dataSet[$model]);
+
+            if (!empty($model::$constraints)){
+                foreach($model::$constraints as $constrainedProperty => $constraint) {
+                    if(isset($dataSet[$constrainedProperty]) && !empty($dataSet[$constrainedProperty])) {
+                        if (is_array($obj->{$constrainedProperty})) {
+                            array_walk($dataSet[$constrainedProperty], function ($dependancy) use ($obj, $constrainedProperty, $constraint) { 
+                                array_push( $obj->{$constrainedProperty}, new $constraint['model'](...$dependancy[$constraint['model']]));
+                            });
+                        }
+                        else {
+                            $obj->{$property} = new $constraint['model'](...$dataSet[$constrainedProperty][$constraint['model']]);
+                        }
+                    }
+                }
+            }
+
+            $objs[] = $obj;
+        }
+
+        return $objs;
+    }
+
+    private static function lazyLoad(string $model, array $results): array
+    {
+        $db = Database::getInstance();
+
+        $data = [];
+
+        foreach($results as &$record) {
+            if(!empty($model::$constraints)) {
+                foreach($model::$constraints as $property => $constraint) {
+                    $query = "SELECT " . self::getCols($constraint['model']) . " FROM {$constraint['model']::$table['name']}\r\n";
+
+                    // $query .= match($constraint['relationType']) {
+                    //     'oneToOne', 'hasOne' => 'INNER',
+                    //     'manyToOne', 'hasMany' => "INNER JOIN {$model::$table['name']} ON {$model::$table['name']}.{$constraint['on']['primaryKey']} = {$constraint['model']::$table['name']}.{$constraint['on']['foreignKey']} WHERE {$model::$table['name']}.{$constraint['on']['primaryKey']} = " . $record[implode('_', [$model::$table['name'], $constraint['on']['primaryKey']])]
+                    // };
+
+                    $query .= "WHERE {$constraint['model']::$table['name']}.{$constraint['on']['foreignKey']} = " . $record[implode('_', [$model::$table['name'], $constraint['on']['primaryKey']])];
+
+                    if(!empty($db->query($query)->fetchAll(\PDO::FETCH_ASSOC))) {
+                        $record[$property] = $db->query($query)->fetchAll(\PDO::FETCH_ASSOC);
+                    }
+                }
+            }
+
+            $data[] = self::getDataSet($model, $record);
+        }
+
+        return $data;
+    }
+
+    private static function eagerLoad()
+    {
+        // For lazyloading maybe just a where, joins for eagerloading?
+                    //INNER JOIN {$model::$table['name']} ON {$model::$table['name']}.{$constraint['on']['primaryKey']} = {$constraint['model']::$table['name']}.{$constraint['on']['foreignKey']} WHERE {$model::$table['name']}.{$constraint['on']['primaryKey']} = " . $record[implode('_', [$model::$table['name'], $constraint['on']['primaryKey']])]
+    }
+
     private static function bindParams($statement, $params): void 
     {
         foreach ($params as $key => $value) {
@@ -156,12 +169,12 @@ abstract class Model
         }
     }
 
-    private static function getCols(string $model, bool $withConnectedModel = false): string
+    private static function getCols(string $model, bool $returnFormated = true, bool $withConnectedModel = false): string
     {
         $cols = [];
-
-        array_map(function ($col) use ($model, &$cols) {
-            $cols[] = "{$model::$table['name']}.$col '{$model::$table['name']}_$col'";
+        //TODO: make getcols also return not ID from model
+        array_map(function ($col) use ($model, $returnFormated, &$cols) {
+            $cols[] = $returnFormated ? "{$model::$table['name']}.$col '{$model::$table['name']}_$col'" : $col;
         }, $model::$table['columns']);
 
 

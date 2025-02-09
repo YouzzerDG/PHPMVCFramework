@@ -59,6 +59,12 @@ class Route
     {
         $currentPage = '/' . $_GET['_url'] ?? '/';
 
+        //NOTE: Route *WILL* replace segments to placeholders *IF* one of the six base controller methods is not defined
+        //      in routing registry (see init.php). E.g. /contacts/create *WILL* load as if it was meant for 'detail'
+        //      method in the controller *IF* create is not defined.
+        //TODO: Find a way if the segment of uri resembles one of the six base controller method names to not overwrite segment to placeholder
+        //      and instead show 404 page.
+
         // Load controller if route is found
         if (isset($this->routes[$currentPage])) {
             (new $this->routes[$currentPage]['controller']())->{$this->routes[$currentPage]['action']}();
@@ -90,6 +96,9 @@ class Route
 
                 if (method_exists($controller, $this->routes[$route]['action'])) {
                     call_user_func_array([$controller, $this->routes[$route]['action']], $args);
+                }
+                else {
+                    echo 'Functie bestaat niet!';
                 }
             }
             else {

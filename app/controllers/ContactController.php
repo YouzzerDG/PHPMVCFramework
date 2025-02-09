@@ -4,6 +4,7 @@ namespace Controller;
 
 use App\View;
 use Model\Contact;
+use App\Requests\PostRequest;
 
 class ContactController implements IController
 {
@@ -11,18 +12,46 @@ class ContactController implements IController
     {
         $contacts = Contact::all();
 
-        var_dump($contacts);
+        if(PostRequest::hasData()) {
+            var_dump(PostRequest::getData());
+        }
+
+        // var_dump($contacts);
         
         echo View::render('contacts/index');
     }
 
-    public function show($id): void 
+    public function detail($id): void 
     {
         $contact = Contact::find(['id' => $id]);
 
-        var_dump($contact);
+        // var_dump($contact);
+
+        echo View::render('contacts/detail', ['contact' => $contact]);
     }
-    public function create(): void {}
+
+    public function create(): void 
+    {
+        if(PostRequest::hasData()) {
+            $postData = PostRequest::getData();
+
+            Contact::add($postData);
+        }
+        else {
+            echo View::render('contacts/create');
+        }
+    }
+    
+    public function edit($id): void
+    {
+        $contact = Contact::find(['id' => $id]);
+
+        // var_dump($contact);
+
+        echo View::render('contacts/edit', ['contact' => $contact]);
+    }
+
     public function update($id): void {}
+    
     public function delete($id): void {}
 }

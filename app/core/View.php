@@ -7,9 +7,11 @@ abstract class View
         $viewFile = APP_PATH . 'views/' . $view . '.php';
         $templateFile = APP_PATH . 'views/template.php';
 
-        if(!file_exists($viewFile) || !file_exists($templateFile))
+        if(!file_exists($viewFile) || !file_exists($templateFile)) {
+            require APP_PATH . 'views/404.php';
             return false;
-
+        }
+            
         $renderData = self::inject($viewFile, $viewTemplateData);
         
         return self::inject($templateFile, ['renderData' => $renderData] + $viewTemplateData);
