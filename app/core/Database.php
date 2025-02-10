@@ -39,4 +39,21 @@ class Database
         return self::$instance;
     }
 
+    public static function Transaction(callable $callback): bool
+    {
+        $db = self::getInstance();
+
+        try {
+            $db->beginTransaction();
+
+            var_dump($callback($db));
+            exit;
+
+            return $db->commit();
+        } catch (\PDOException $e) {
+            $db->rollBack();
+
+            var_dump($e->getMessage());
+        }
+    }
 }

@@ -18,10 +18,16 @@ class PostRequest {
         return false;
     }
 
-    public static function getData(): array|null
-    {
-        if(self::hasData()) {
-            return $_POST;
+    public static function getData(string $prefix = ''): array|null
+    {                
+        if(self::hasData() && isset($_POST['hmn']) && $_POST['hmn'] == true) {
+            if($prefix !== '') {
+                return array_filter($_POST, function ($key) use ($prefix) {
+                    return str_contains($key, $prefix);
+                }, ARRAY_FILTER_USE_KEY);
+            } else {
+                return array_slice($_POST, 1, count($_POST), true);
+            }
         }
 
         return null;

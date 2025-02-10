@@ -5,40 +5,39 @@ namespace Controller;
 use App\View;
 use Model\Contact;
 use App\Requests\PostRequest;
+use App\Route;
 
 class ContactController implements IController
 {
     public function index(): void
     {
         $contacts = Contact::all();
-
-        if(PostRequest::hasData()) {
-            var_dump(PostRequest::getData());
-        }
-
-        // var_dump($contacts);
         
-        echo View::render('contacts/index');
+        var_dump(new View('contacts/index'));
+
+        (new View('contacts/index'))->render();
     }
 
     public function detail($id): void 
     {
         $contact = Contact::find(['id' => $id]);
 
-        // var_dump($contact);
-
-        echo View::render('contacts/detail', ['contact' => $contact]);
+        (new View('contacts/detail', ['contact' => $contact]))->render();
     }
 
     public function create(): void 
     {
         if(PostRequest::hasData()) {
-            $postData = PostRequest::getData();
+            $postData = PostRequest::getData('contact');
 
-            Contact::add($postData);
+            $msg = 'Mislukt!';
+            if(Contact::add($postData)) {
+                $msg = 'Contact succesvol opgeslagen!';
+                Route::DirectTo('/contacts');
+            }
         }
         else {
-            echo View::render('contacts/create');
+            (new View('contacts/create'))->render();
         }
     }
     
@@ -46,9 +45,7 @@ class ContactController implements IController
     {
         $contact = Contact::find(['id' => $id]);
 
-        // var_dump($contact);
-
-        echo View::render('contacts/edit', ['contact' => $contact]);
+        (new View('contacts/edit', ['contact' => $contact]))->render();
     }
 
     public function update($id): void {}

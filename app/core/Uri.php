@@ -11,6 +11,11 @@ abstract class Uri {
 
     public static function get(): string
     {
-        return isset($_SERVER['HTTPS']) ? 'https://' : 'http://' . $_SERVER['SERVER_NAME'] . strtok($_SERVER['REQUEST_URI'],'?'); 
+        return self::getBaseUrl() . strtok($_SERVER['REQUEST_URI'],'?'); 
+    }
+
+    public static function getBaseUrl(): string
+    {
+        return isset($_SERVER['HTTPS']) ? 'https://' : 'http://' . $_SERVER['SERVER_NAME'];
     }
 }

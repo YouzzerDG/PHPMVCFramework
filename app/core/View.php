@@ -1,23 +1,29 @@
 <?php namespace App;
 
-abstract class View
+class View
 {
-    public static function render(string $view, array $viewTemplateData = []): string|false
-    {
+    private string $viewData;
+    
+    public function __construct(
+        private string $view,
+        private array $viewTemplateData = []
+    ) {
         $viewFile = APP_PATH . 'views/' . $view . '.php';
-        $templateFile = APP_PATH . 'views/template.php';
 
-        if(!file_exists($viewFile) || !file_exists($templateFile)) {
+        if(!file_exists($viewFile)) {
             require APP_PATH . 'views/404.php';
-            return false;
+            exit;
         }
-            
-        $renderData = self::inject($viewFile, $viewTemplateData);
-        
-        return self::inject($templateFile, ['renderData' => $renderData] + $viewTemplateData);
+
+        $this->viewData = $this->inject($viewFile, $viewTemplateData);
+    }
+    
+    public function render(): void
+    {
+        echo $this->inject(APP_PATH . 'views/template.php', ['renderData' => $this->viewData]);
     }
 
-    private static function inject(string $file, array $data = []): string|false
+    private function inject(string $file, array $data = []): string|false
     {
         ob_start();
         

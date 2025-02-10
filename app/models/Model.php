@@ -5,7 +5,6 @@ use ReflectionProperty;
 
 abstract class Model
 {
-    // private \PDO $db;
     protected static array $table = [
         'name' => '',
         'columns' => [],
@@ -40,6 +39,10 @@ abstract class Model
 
     public static function find(array $param): Model|null
     {
+        if(empty($param)){
+            return null;
+        }
+        
         $model = self::getCalledModel();
 
         $query = "SELECT " . self::getCols($model);
@@ -74,14 +77,41 @@ abstract class Model
 
     public static function add(mixed $data): bool
     {
-        $model = self::getCalledModel();
+        if(empty($data) || is_null($data)) {
+            return false;
+        }
 
-        //TODO: make getcols also return not ID from model
-        $query = "INSERT INTO {$model::$table['name']} (" . self::getCols($model, false) . ")";
+        return Database::Transaction(function(\PDO $db) use ($data) {
+            $model = self::getCalledModel();
 
-        var_dump($query);
+            $cols = self::getCols($model, false, false);
 
+            $preparedCols = implode(", \r\n", array_map(function($col) {
+                return ':' . trim($col);
+            }, explode(',', $cols)));
+
+            $query = "INSERT INTO {$model::$table['name']} ($cols) VALUES ($preparedCols)";
+
+            $statement = $db->prepare($query);
+
+            var_dump($statement,$query,$data);
+            // if(!is_array($data[array_key_first($data)])){
+            
+            // }
+            // else{
+
+            // }
+        });
+    }
+
+    public static function update(mixed $data): bool
+    {
         return false;
+    }
+
+    public static function delete(mixed $data): bool
+    {
+        return false; 
     }
 
     public static function __callStatic($name, $arguments)
@@ -92,7 +122,7 @@ abstract class Model
 
     //Internal model functions
 
-    private static function getCalledModel()
+    private static function getCalledModel(): string
     {
         return get_called_class();
     }
@@ -169,12 +199,14 @@ abstract class Model
         }
     }
 
-    private static function getCols(string $model, bool $returnFormated = true, bool $withConnectedModel = false): string
+    private static function getCols(string $model, bool $returnFormated = true, bool $returnWithId = true , bool $withConnectedModel = false): string
     {
         $cols = [];
-        //TODO: make getcols also return not ID from model
-        array_map(function ($col) use ($model, $returnFormated, &$cols) {
-            $cols[] = $returnFormated ? "{$model::$table['name']}.$col '{$model::$table['name']}_$col'" : $col;
+
+        array_map(function ($col) use ($model, $returnFormated, $returnWithId, &$cols) {
+            if ($returnWithId === true || ($returnWithId === false && $col !== 'id')) {
+                $cols[] = $returnFormated ? "{$model::$table['name']}.$col '{$model::$table['name']}_$col'" : $col;
+            }
         }, $model::$table['columns']);
 
 

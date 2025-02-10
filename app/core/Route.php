@@ -29,6 +29,12 @@ class Route
         $this->run();
     }
 
+    public static function DirectTo(string $url): void
+    {
+        header("Location: " . \App\Uri::getBaseUrl() . $url);
+        exit;
+    }
+
     private function createUriIdentifier(array $uriSegments): string
     {
         if (empty($uriSegments)) return '/';
