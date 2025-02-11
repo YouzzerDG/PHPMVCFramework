@@ -1,6 +1,7 @@
 <?php namespace Model;
 
 use App\Database;
+use App\Exceptions;
 use ReflectionProperty;
 
 abstract class Model
@@ -225,14 +226,7 @@ abstract class Model
 
     private static function getBlueprint(string $model, mixed $data): array
     {
-        return [$model => array_combine(
-            array_map(
-                function ($key) use ($model) {
-                    return str_replace($model::$table['name'] . "_", '', $key);
-                }, 
-                array_keys($data)
-            ), 
-        $data)];
+        return [$model => \App\Utils::subTrimArrayKeys($model::$table['name'], $data)];
     }
 
     private static function getDataSet(string $model, mixed $result): array

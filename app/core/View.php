@@ -18,6 +18,11 @@ class View
         $this->viewData = $this->inject($viewFile, $viewTemplateData);
     }
     
+    public function renderStandalone(): void
+    {
+        echo $this->viewData;
+    }
+
     public function render(): void
     {
         echo $this->inject(APP_PATH . 'views/template.php', ['renderData' => $this->viewData]);
