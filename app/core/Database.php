@@ -39,6 +39,47 @@ class Database
         return self::$instance;
     }
 
+    /**
+     * Returns prepared statement as if vals were an collection of array
+     * */ 
+    public static function bindParamsToValsRec(\PDOStatement $statement, array $placeholders, array $valsCollection): \PDOStatement 
+    {
+        if(empty($valsCollection) || empty($placeholders)){
+            throw new \Exception("Parameter(s) empty.");
+        }
+
+        foreach($valsCollection as $valsArray) {
+            $statement = self::bindParamsToVals($statement, $placeholders, $valsArray);
+        }
+
+        return $statement;
+    }
+
+    /**
+     * Returns prepared statement
+     * */ 
+    public static function bindParamsToVals(\PDOStatement $statement, array $placeholders, array $vals): \PDOStatement 
+    {
+        if(count($vals) > count($placeholders)){
+            throw new \Exception("Too many values match amount of parameters.");
+        }
+
+        if(count($vals) < count($placeholders)){
+            throw new \Exception("Too many parameters match amount of values.");
+        }
+        
+        $data = array_combine($placeholders, $vals);
+
+        foreach ($data as $key => $value) {
+            $statement->bindValue($key, $value);
+        }
+
+        return $statement;
+    }
+
+    /**
+     * Used for INSERT, UPDATE & DELETE queries. Ensures if Exception is thrown to rollback the executed query.
+     * */ 
     public static function Transaction(callable $callback): bool
     {
         $db = self::getInstance();
@@ -46,14 +87,17 @@ class Database
         try {
             $db->beginTransaction();
 
-            var_dump($callback($db));
-            exit;
+            $callback($db);
 
-            return $db->commit();
+            if($db->commit()){
+                return true;
+            }
+            
+            return $db->rollBack();
         } catch (\PDOException $e) {
             $db->rollBack();
 
-            var_dump($e->getMessage());
+            var_dump($e);
         }
     }
 }

@@ -59,7 +59,7 @@ abstract class Model
         
         $statement = $db->prepare($query);
 
-        self::bindParams($statement, $param);
+        $statement = Database::bindParamsToVals($statement, [$placeholder], $param);
 
         $statement->execute();
 
@@ -87,21 +87,24 @@ abstract class Model
 
             $cols = self::getCols($model, false, false);
 
-            $preparedCols = implode(", \r\n", array_map(function($col) {
+            $preparedCols = array_map(function($col) {
                 return ':' . trim($col);
-            }, explode(',', $cols)));
+            }, explode(',', $cols));
 
-            $query = "INSERT INTO {$model::$table['name']} ($cols) VALUES ($preparedCols)";
+            $preparedColsString = implode(", \r\n", $preparedCols);
+
+            $query = "INSERT INTO {$model::$table['name']} ($cols) VALUES ($preparedColsString)";
 
             $statement = $db->prepare($query);
 
-            var_dump($statement,$query,$data);
-            // if(!is_array($data[array_key_first($data)])){
-            
-            // }
-            // else{
+            if(!is_array($data[array_key_first($data)])){
+                $statement = Database::bindParamsToVals($statement, $preparedCols, $data);
+            }
+            else{
+                $statement = Database::bindParamsToValsRec($statement, $preparedCols, $data);
+            }
 
-            // }
+            $statement->execute();
         });
     }
 
@@ -192,14 +195,6 @@ abstract class Model
                     //INNER JOIN {$model::$table['name']} ON {$model::$table['name']}.{$constraint['on']['primaryKey']} = {$constraint['model']::$table['name']}.{$constraint['on']['foreignKey']} WHERE {$model::$table['name']}.{$constraint['on']['primaryKey']} = " . $record[implode('_', [$model::$table['name'], $constraint['on']['primaryKey']])]
     }
 
-    private static function bindParams($statement, $params): void 
-    {
-        foreach ($params as $key => $value) {
-            $placeholder = ":{$key}";
-            $statement->bindParam($placeholder, $params[$key]);
-        }
-    }
-
     private static function getCols(string $model, bool $returnFormated = true, bool $returnWithId = true , bool $withConnectedModel = false): string
     {
         $cols = [];
@@ -226,7 +221,7 @@ abstract class Model
 
     private static function getBlueprint(string $model, mixed $data): array
     {
-        return [$model => \App\Utils::subTrimArrayKeys($model::$table['name'], $data)];
+        return [$model => \App\Utils::subTrimArrayKeys($model::$table['name'].'_', $data)];
     }
 
     private static function getDataSet(string $model, mixed $result): array

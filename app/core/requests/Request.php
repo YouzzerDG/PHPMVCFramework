@@ -1,7 +1,9 @@
 <?php namespace App\Requests;
 
-
-class PostRequest extends Request {
+abstract class Request implements IRequest
+{
+    public const GET 
+    
     public static function hasData(): bool
     {
         if(!empty($_POST)) {
@@ -12,7 +14,7 @@ class PostRequest extends Request {
     }
 
     public static function get(string $prefix = '', bool $trimPrefix = false): array|null
-    {                
+    {
         if(self::hasData() && isset($_POST['hmn']) && $_POST['hmn'] == true) {
             if($prefix !== '') {
                 $filteredData = array_filter($_POST, function ($key) use ($prefix) {

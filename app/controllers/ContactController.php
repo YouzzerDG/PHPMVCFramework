@@ -28,7 +28,7 @@ class ContactController implements IController
     public function create(): void 
     {
         if(PostRequest::hasData()) {
-            $postData = PostRequest::getData('contact');
+            $postData = PostRequest::get('contact_', true);
 
             $msg = 'Mislukt!';
             if(Contact::add($postData)) {
