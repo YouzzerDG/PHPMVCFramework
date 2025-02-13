@@ -3,21 +3,28 @@
 interface IRequest {
 
     /**
-     * Check if request has data.
+     * Checks if item exists with specified key in array of request type.
      * 
-     * @return true if request has data.
-     * @return false if rquest has no data.
+     * @return true if key is found.
+     * @return false else return false.
      * */
-    public static function hasData(): bool;
+    public function has(string $key): bool;
 
     /**
-     * Returns array of type request.
+     * Checks first if value of key in array of type request exists.
      * 
-     * @param string $prefix specified string to filter on array keys.
-     * @param bool $trimPrefix set to true to remove '$prefix' from array keys.
+     * @param string $key array key of item in type request array.
+     * @param mixed $defaultFallback default value to fallback on if item does not exists.
      * 
-     * @return array returns array of type request.
-     * @return null if data of type request is empty.
+     * @return mixed returns value of specified key if found, else return $defaultFallback.
      * */
-    public static function get(string $prefix = '', bool $trimPrefix = false): array|null;
+    public function get(string $key, mixed $defaultFallback = null): mixed;
+
+    /**
+     * Returns array of request type.
+     * 
+     * @return array|null array of request type or null if not found.
+     * */
+    public function all(): array|null;
+
 }

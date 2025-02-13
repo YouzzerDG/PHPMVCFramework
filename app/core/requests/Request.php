@@ -2,35 +2,60 @@
 
 abstract class Request implements IRequest
 {
-    public const GET 
-    
-    public static function hasData(): bool
-    {
-        if(!empty($_POST)) {
-            return true;
-        }
+    /**
+     * The global request data array.
+     **/ 
+    protected array $requestData = [
+        '_request' => []
+    ];
 
-        return false;
+    /**
+     * Creates array of type request in global request data array.
+     * 
+     * @param string $requestType name of type request.
+     **/ 
+    public function __construct(private string $requestType)
+    {
+        if (!isset($this->requestData['_request'][$requestType])) {
+            $this->requestData['_request'][$requestType] = $this->fetchRequestData();
+        }
     }
 
-    public static function get(string $prefix = '', bool $trimPrefix = false): array|null
+    private function fetchRequestData(): array
     {
-        if(self::hasData() && isset($_POST['hmn']) && $_POST['hmn'] == true) {
-            if($prefix !== '') {
-                $filteredData = array_filter($_POST, function ($key) use ($prefix) {
-                    return str_contains($key, $prefix);
+        return match ($this->requestType) {
+            '_get' => $_GET,
+            '_post' => $_POST,
+            default => [],
+        };
+    }
+
+    public function get(string $key, mixed $defaultFallback = null): mixed
+    {
+        return $this->requestData['_request'][$this->requestType][$key] ?? $defaultFallback;
+    }
+
+    public function has(string $key): bool
+    {
+        return isset($this->requestData['_request'][$this->requestType][$key]);
+    }
+
+    public function all(): array|null
+    {
+        return $this->requestData['_request'][$this->requestType] ?? [];
+    }
+
+    public function getDataSet(string $needle, bool $trimNeedle = false): array|null
+    {
+        if(isset($this->requestData['_request'][$this->requestType]) && !empty($this->requestData['_request'][$this->requestType])) {
+            $filteredData = array_filter($this->requestData['_request'][$this->requestType],
+                function ($key) use ($needle) {
+                    return str_contains($key, $needle);
                 }, ARRAY_FILTER_USE_KEY);
 
-                if($trimPrefix)
-                    return \App\Utils::subTrimArrayKeys($prefix, $filteredData);
-                else{
-                    return $filteredData;
-                }
-            } else {
-                return array_slice($_POST, 1, count($_POST), true);
-            }
+            return $trimNeedle ? \App\Utils::subTrimArrayKeys($needle, $filteredData) : $filteredData;
         }
 
-        return null;
+        return [];
     }
 }

@@ -1,34 +1,8 @@
 <?php namespace App\Requests;
 
-
 class PostRequest extends Request {
-    public static function hasData(): bool
+    public function __construct()
     {
-        if(!empty($_POST)) {
-            return true;
-        }
-
-        return false;
-    }
-
-    public static function get(string $prefix = '', bool $trimPrefix = false): array|null
-    {                
-        if(self::hasData() && isset($_POST['hmn']) && $_POST['hmn'] == true) {
-            if($prefix !== '') {
-                $filteredData = array_filter($_POST, function ($key) use ($prefix) {
-                    return str_contains($key, $prefix);
-                }, ARRAY_FILTER_USE_KEY);
-
-                if($trimPrefix)
-                    return \App\Utils::subTrimArrayKeys($prefix, $filteredData);
-                else{
-                    return $filteredData;
-                }
-            } else {
-                return array_slice($_POST, 1, count($_POST), true);
-            }
-        }
-
-        return null;
+        return parent::__construct('_post');
     }
 }
