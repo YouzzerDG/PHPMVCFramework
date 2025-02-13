@@ -76,6 +76,7 @@ class Route
             (new $this->routes[$currentPage]['controller']())->{$this->routes[$currentPage]['action']}();
         } else {
             $currentPageSegments = explode('/', ltrim($currentPage, '/'));
+            $getRequest = new \App\Requests\GetRequest();
 
             $args = [];
             foreach ($currentPageSegments as $key => &$uriSegment) {
@@ -89,11 +90,14 @@ class Route
                     if (!strpos($routeKey, $uriSegment) && isset($this->routes[$routeKey]['parameters'][$key])) {
                         $param = ltrim($this->routes[$routeKey]['parameters'][$key], ':');
 
+                        $getRequest->set($param, $uriSegment);
                         $args[$param] = $uriSegment;
                         $uriSegment = ':';
                     }
                 }
             }
+
+            // var_dump($getRequest);
 
             $route = '/' . implode('/', $currentPageSegments);
 

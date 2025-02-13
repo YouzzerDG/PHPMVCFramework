@@ -1,5 +1,5 @@
 <?php 
-var_dump($contact);
+// var_dump($contact);
 ?>
 
 <h1>Contact detail... #<?= $contact->getId(); ?></h1>

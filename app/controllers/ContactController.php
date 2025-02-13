@@ -4,31 +4,32 @@ namespace Controller;
 
 use App\View;
 use Model\Contact;
-use App\Requests\PostRequest;
+use App\Requests;
 use App\Route;
+use Slim\Psr7\Request;
 
-class ContactController implements IController
+class ContactController extends Controller implements IController
 {
     public function index(): void
     {
-        $contacts = Contact::all();
-        
-        var_dump(new View('contacts/index'));
-
-        (new View('contacts/index'))->render();
+        $this->render(new View('contacts/index'));
     }
 
     public function detail($id): void 
     {
         $contact = Contact::find(['id' => $id]);
 
-        (new View('contacts/detail', ['contact' => $contact]))->render();
+        var_dump((new Requests\GetRequest())->all());
+
+        $this->render((new View('contacts/detail', ['contact' => $contact])));
     }
 
     public function create(): void 
     {
-        if(PostRequest::hasData()) {
-            $postData = PostRequest::get('contact_', true);
+        $postRequest = new Requests\PostRequest();
+        
+        if(!empty($postRequest->all())) {
+            $postData = $postRequest->getDataSet('contact_', true);
 
             $msg = 'Mislukt!';
             if(Contact::add($postData)) {
@@ -37,7 +38,7 @@ class ContactController implements IController
             }
         }
         else {
-            (new View('contacts/create'))->render();
+            $this->render((new View('contacts/create')));
         }
     }
     
@@ -45,7 +46,7 @@ class ContactController implements IController
     {
         $contact = Contact::find(['id' => $id]);
 
-        (new View('contacts/edit', ['contact' => $contact]))->render();
+        $this->render((new View('contacts/edit', ['contact' => $contact])));
     }
 
     public function update($id): void {}

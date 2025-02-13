@@ -16,9 +16,14 @@ interface IRequest {
      * @param string $key array key of item in type request array.
      * @param mixed $defaultFallback default value to fallback on if item does not exists.
      * 
-     * @return mixed returns value of specified key if found, else return $defaultFallback.
+     * @return mixed gets value of specified key if found, else return $defaultFallback.
      * */
     public function get(string $key, mixed $defaultFallback = null): mixed;
+
+    /**
+     * Sets new item in array of type request.
+     **/ 
+    public function set(string $key, mixed $value): void;
 
     /**
      * Returns array of request type.
@@ -27,4 +32,8 @@ interface IRequest {
      * */
     public function all(): array|null;
 
+    /**
+     * Removes item with specified key from array of request type.
+     * */
+    public function remove(string $key): void;
 }
