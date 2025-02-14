@@ -5,6 +5,8 @@ use App\Requests;
 
 abstract class Controller
 {
+    use \App\Cleaners\Sanitizer;
+    
     public function __construct()
     {
         $postRequest = new Requests\PostRequest;
@@ -22,7 +24,7 @@ abstract class Controller
     /**
      * Renders given view with using /views/template.php as base.
      **/ 
-    public function render(View $view): void
+    protected function render(View $view): void
     {
         echo (new View('template', ['renderData' => $view]));
     }
@@ -30,13 +32,8 @@ abstract class Controller
     /**
      * Renders view with entirely own HTML within.
      **/ 
-    public function renderStandalone(View $view): void
+    protected function renderStandalone(View $view): void
     {
         echo $view;
-    }
-
-    private function sanitize(string $dirtyString): string
-    {
-        return htmlspecialchars(strip_tags($dirtyString), ENT_QUOTES, 'UTF-8');
     }
 }

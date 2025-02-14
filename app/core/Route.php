@@ -1,8 +1,18 @@
 <?php namespace App;
 
+use App\Requests\GetRequest;
+use App\Uri;
+
 class Route
 {
+    use \App\Cleaners\Sanitizer;
+
     private array $routes;
+
+    public function __construct(
+        private Uri $uri = new Uri(),
+        private GetRequest $getRequest = new GetRequest()
+    ) {}
 
     public function register(array $routes): void
     {
@@ -29,9 +39,9 @@ class Route
         $this->run();
     }
 
-    public static function DirectTo(string $url): void
+    public function DirectTo(string $url): void
     {
-        header("Location: " . \App\Uri::getBaseUrl() . $url);
+        header("Location: " . $this->uri->getBaseUrl() . $url);
         exit;
     }
 
@@ -63,7 +73,7 @@ class Route
 
     private function run(): void
     {
-        $currentPage = '/' . $_GET['_url'] ?? '/';
+        $currentPage = '/' . $this->getRequest->get('_url', '');
 
         //NOTE: Route *WILL* replace segments to placeholders *IF* one of the six base controller methods is not defined
         //      in routing registry (see init.php). E.g. /contacts/create *WILL* load as if it was meant for 'detail'
@@ -76,7 +86,6 @@ class Route
             (new $this->routes[$currentPage]['controller']())->{$this->routes[$currentPage]['action']}();
         } else {
             $currentPageSegments = explode('/', ltrim($currentPage, '/'));
-            $getRequest = new \App\Requests\GetRequest();
 
             $args = [];
             foreach ($currentPageSegments as $key => &$uriSegment) {
@@ -87,17 +96,17 @@ class Route
                     // If segment of uri is not found in the route key
                     // AND if segment is bound to a parameter,
                     // get the parameter name, and it binds to the value of the uri segment.
-                    if (!strpos($routeKey, $uriSegment) && isset($this->routes[$routeKey]['parameters'][$key])) {
+
+                    $cleanSegment = $this->sanitize($uriSegment);
+                    if (!strpos($routeKey, $cleanSegment) && isset($this->routes[$routeKey]['parameters'][$key])) {
                         $param = ltrim($this->routes[$routeKey]['parameters'][$key], ':');
 
-                        $getRequest->set($param, $uriSegment);
-                        $args[$param] = $uriSegment;
+                        $this->getRequest->set($param, $cleanSegment);
+                        $args[$param] = $cleanSegment;
                         $uriSegment = ':';
                     }
                 }
             }
-
-            // var_dump($getRequest);
 
             $route = '/' . implode('/', $currentPageSegments);
 

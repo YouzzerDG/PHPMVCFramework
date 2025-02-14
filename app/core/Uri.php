@@ -1,21 +1,83 @@
 <?php namespace App;
 
-abstract class Uri {
+class Uri {
 
-    public static function __callStatic($name, $arguments)
+    use \App\Cleaners\Sanitizer;
+
+    /**
+     * Constructor for initializing the Uri class with URL-related data.
+     *
+     * @param bool $secured Indicates if the connection is secured.
+     * @param string $protocol The protocol used for the URL.
+     * @param string $baseUrl The base URL, typically the host/domain.
+     * @param string $path The URL path.
+     * @param string $currentUrl The full current URL.
+     * @param array $pathSegments An array of path segments.
+     * @param array $magicGet Custom GET parameters, if any exists.
+     **/
+    public function __construct(
+        private bool $secured = false,
+        private string $protocol = '',
+        private string $baseUrl = '',
+        private string $path = '',
+        private string $currentUrl = '',
+        private array $pathSegments = [],
+        private array $magicGet = []
+    )
     {
-        // var_dump('call statuc');
-        // var_dump($name, $arguments);
-        return $name;
+        $getRequest = new Requests\GetRequest;
+        
+        $this->secured = isset($_SERVER['HTTPS']);
+        $this->protocol = $this->secured ? 'https' : 'http' . '://';
+        $this->baseUrl = $_SERVER['HTTP_HOST'];
+        $this->path = '/' . $getRequest->get('_url');
+        $this->currentUrl = $this->protocol . $this->baseUrl . $this->path;
+
+        $this->pathSegments = explode('/', ltrim($this->path, '/'));
+
+        $getData = $getRequest->all();
+        $this->magicGet = array_map(function ($dirtyMagicGetItem) {
+            return $this->sanitize($dirtyMagicGetItem);
+        }, array_slice($getData, 0, array_search('_url', array_keys($getData))));
     }
 
-    public static function get(): string
+    /**
+     * Checks if current Uri is secured.
+     **/
+    public function isSecured(): bool
     {
-        return self::getBaseUrl() . strtok($_SERVER['REQUEST_URI'],'?'); 
+        return $this->secured;
     }
 
-    public static function getBaseUrl(): string
+    /**
+     * Get the absolute URL of current Uri.
+     **/ 
+    public function getCurrentUrl(): string
     {
-        return isset($_SERVER['HTTPS']) ? 'https://' : 'http://' . $_SERVER['SERVER_NAME'];
+        return $this->currentUrl;
+    }
+
+    /**
+     * Get the base of current Uri.
+     **/ 
+    public function getBaseUrl(): string
+    {
+        return $this->baseUrl;
+    }
+
+    /**
+     * Get the path of current Uri.
+     */ 
+    public function getPath()
+    {
+        return $this->path;
+    }
+
+    /**
+     * Get the segments of current Uri.
+     **/ 
+    public function geSegments(): array
+    {
+        return $this->pathSegments;
     }
 }

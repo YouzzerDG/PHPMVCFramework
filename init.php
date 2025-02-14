@@ -9,6 +9,7 @@ require_once 'vendor/autoload.php';
     ['/', Controller\HomeController::class, 'index'],
     ['/contacts', Controller\ContactController::class, 'index'],
     ['/contacts/:id', Controller\ContactController::class, 'detail'],
+    ['/contacts/:id/delete', Controller\ContactController::class, 'delete'],
     ['/contacts/create', Controller\ContactController::class, 'create'],
     ['/reservations', Controller\ReservationController::class, 'index'],
     ['/reservations/create', Controller\ReservationController::class, 'create'],

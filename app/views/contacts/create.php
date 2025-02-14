@@ -1,4 +1,4 @@
-<form action="<?= \App\Uri::get(); ?>" method="post">
+<form action="<?= (new \App\Uri)->getCurrentUrl(); ?>" method="post">
     <input type="hidden" name="hmn" value="true">
     <input type="hidden" name="doPost" value="true">
     <div>

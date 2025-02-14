@@ -10,7 +10,7 @@ abstract class Request implements IRequest
     ];
 
     /**
-     * Creates array of type request in global request data array.
+     * Fetches array of type request in global request data array.
      * 
      * @param string $requestType name of type request.
      **/ 

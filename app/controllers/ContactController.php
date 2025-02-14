@@ -6,7 +6,6 @@ use App\View;
 use Model\Contact;
 use App\Requests;
 use App\Route;
-use Slim\Psr7\Request;
 
 class ContactController extends Controller implements IController
 {
@@ -18,8 +17,6 @@ class ContactController extends Controller implements IController
     public function detail($id): void 
     {
         $contact = Contact::find(['id' => $id]);
-
-        var_dump((new Requests\GetRequest())->all());
 
         $this->render((new View('contacts/detail', ['contact' => $contact])));
     }
@@ -34,7 +31,7 @@ class ContactController extends Controller implements IController
             $msg = 'Mislukt!';
             if(Contact::add($postData)) {
                 $msg = 'Contact succesvol opgeslagen!';
-                Route::DirectTo('/contacts');
+                (new Route)->directTo('/contacts');
             }
         }
         else {
@@ -51,5 +48,8 @@ class ContactController extends Controller implements IController
 
     public function update($id): void {}
     
-    public function delete($id): void {}
+    public function delete($id): void 
+    {
+        
+    }
 }
