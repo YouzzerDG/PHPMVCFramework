@@ -1,6 +1,11 @@
+<?php
+    // var_dump((new \App\Storage\SessionStorage)->getCSRF(),420);
+?>
+
 <form action="<?= (new \App\Uri)->getCurrentUrl(); ?>" method="post">
     <input type="hidden" name="hmn" value="true">
     <input type="hidden" name="doPost" value="true">
+    <input type="hidden" name="csrfToken" value="<?= (new \App\Storage\SessionStorage)->getCSRF(); ?>">
     <div>
         <label for="contact_first_name">First name</label>
         <input type="text" name="contact_first_name" id="contact_first_name">

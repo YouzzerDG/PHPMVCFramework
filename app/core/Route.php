@@ -2,6 +2,7 @@
 
 use App\Requests\GetRequest;
 use App\Uri;
+use App\Storage\SessionStorage;
 
 class Route
 {
@@ -10,8 +11,9 @@ class Route
     private array $routes;
 
     public function __construct(
-        private Uri $uri = new Uri(),
-        private GetRequest $getRequest = new GetRequest()
+        private Uri $uri = new Uri,
+        private GetRequest $getRequest = new GetRequest,
+        private SessionStorage $session = new SessionStorage
     ) {}
 
     public function register(array $routes): void
@@ -73,6 +75,8 @@ class Route
 
     private function run(): void
     {
+        // $this->session->start();
+        
         $currentPage = '/' . $this->getRequest->get('_url', '');
 
         //NOTE: Route *WILL* replace segments to placeholders *IF* one of the six base controller methods is not defined

@@ -2,16 +2,21 @@
 
 use App\View;
 use App\Requests;
+use App\Storage;
 
 abstract class Controller
 {
     use \App\Cleaners\Sanitizer;
     
-    public function __construct()
+    public function __construct(
+        private Requests\PostRequest $postRequest = new Requests\PostRequest,
+        private Storage\SessionStorage $session = new Storage\SessionStorage
+    )
     {
-        $postRequest = new Requests\PostRequest;
-
-        if($postRequest->has('doPost') && $postRequest->has('hmn') && $postRequest->get('hmn') == true) {
+        if($postRequest->has('doPost') 
+            && ($postRequest->has('hmn') && $postRequest->get('hmn') == true) 
+            && ($postRequest->has('csrfToken') && $postRequest->get('csrfToken') === $session->getCSRF())) {
+            
             $postRequest->remove('doPost');
             $postRequest->remove('hmn');
 
